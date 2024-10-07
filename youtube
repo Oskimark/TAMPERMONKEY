@@ -1,0 +1,76 @@
+// ==UserScript==
+// @name         Modificar Apariencia de YouTube con Fondos de Edad y Contraste
+// @namespace    http://tampermonkey.net/
+// @version      1.4
+// @description  Cambia "visualizaciones" a "views", ajusta la presentación de la edad, cambia el color del canal y ajusta los fondos de la edad con contraste en YouTube.
+// @author       TuNombre
+// @match        *://www.youtube.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Función para modificar el texto de visualizaciones y la edad del video
+    function modificarVisualizacionesYEdad() {
+        let elementosVisualizaciones = document.querySelectorAll('.inline-metadata-item.style-scope.ytd-video-meta-block');
+
+        elementosVisualizaciones.forEach(function(elemento) {
+            // Reemplazar "visualizaciones" por "views"
+            if (elemento.innerText.includes('visualizaciones')) {
+                elemento.innerText = elemento.innerText.replace('visualizaciones', 'views');
+            }
+
+            // Modificar la edad del video: Eliminar "hace" y ajustar "años", "meses", "días" y "horas"
+            if (elemento.innerText.includes('hace')) {
+                let textoEdad = elemento.innerText
+                    .replace('hace ', '') // Eliminar "hace"
+                    .replace('años', 'y')  // Reemplazar "años" por "y"
+                    .replace('año', 'y')  // Reemplazar "año" por "y"
+                    .replace('meses', 'm') // Reemplazar "meses" por "m"
+                    .replace('días', 'd')  // Reemplazar "días" por "d"
+                    .replace('horas', 'h'); // Reemplazar "horas" por "h"
+
+                elemento.innerText = textoEdad;
+
+                // Cambiar el color de fondo según la antigüedad y asegurarse de que el texto tenga contraste
+                if (textoEdad.includes('1 y') || textoEdad.includes('y')) {
+                    elemento.style.backgroundColor = 'red'; // 1 año o más
+                    elemento.style.color = 'white'; // Contraste
+                } else if (textoEdad.includes('m')) {
+                    elemento.style.backgroundColor = 'orange'; // Más de un mes
+                    elemento.style.color = 'black'; // Contraste
+                } else if (textoEdad.includes('d')) {
+                    elemento.style.backgroundColor = 'green'; // Menos de un mes
+                    elemento.style.color = 'white'; // Contraste
+                } else if (textoEdad.includes('h')) {
+                    elemento.style.backgroundColor = 'blue'; // Video reciente (en horas)
+                    elemento.style.color = 'white'; // Contraste
+                }
+            }
+        });
+    }
+
+    // Función para cambiar el color del nombre del canal a azul
+    function modificarColorCanal() {
+        let elementosCanal = document.querySelectorAll('ytd-channel-name a'); // Selecciona el enlace del canal
+
+        elementosCanal.forEach(function(elemento) {
+            elemento.style.color = 'blue'; // Cambia el color del texto a azul
+        });
+    }
+
+    // Función para ejecutar las modificaciones
+    function ejecutarModificaciones() {
+        modificarVisualizacionesYEdad();
+        modificarColorCanal();
+    }
+
+    // Ejecutar la función al cargar la página y cuando se hagan cambios en el DOM (por ejemplo, al desplazarse)
+    let observer = new MutationObserver(ejecutarModificaciones);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Ejecutar inicialmente al cargar la página
+    window.addEventListener('load', ejecutarModificaciones);
+
+})();
